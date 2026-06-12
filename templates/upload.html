@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border: 1px solid #ccc;">
+    <h2>Upload Video</h2>
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Video Title</label>
+            <input type="text" name="title" required style="width: 100%; padding: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Category</label>
+            <select name="category" style="width: 100%; padding: 8px;">
+                <option value="Animation">Animation</option>
+                <option value="Autos & Vehicles">Autos & Vehicles</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Education">Education</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Film">Film</option>
+                <option value="Gaming">Gaming</option>
+                <option value="How-to & Style">How-to & Style</option>
+                <option value="Music">Music</option>
+                <option value="News & Politics">News & Politics</option>
+                <option value="People & Blogs">People & Blogs</option>
+                <option value="Pets & Animals">Pets & Animals</option>
+                <option value="Science & Technology">Science & Technology</option>
+                <option value="Sports">Sports</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Visibility / Privacy</label>
+            <select name="visibility" style="width: 100%; padding: 8px;">
+                <option value="public">Public (Everyone can search and view)</option>
+                <option value="unlisted">Unlisted (Hidden from search/channel, viewable with link)</option>
+                <option value="private">Private (Only you can view)</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px; border: 1px dashed #0033cc; padding: 10px; background: #f0f4ff;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #0033cc;">⏰ Schedule Publication Date & Time (Optional)</label>
+            <input type="datetime-local" name="scheduled_time" style="width: 100%; padding: 6px;">
+            <small style="color: #666; display: block; margin-top: 4px;">Leave empty to publish immediately. If scheduled, video will be hidden until this time.</small>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Description</label>
+            <textarea name="desc" rows="4" style="width: 100%; padding: 8px;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Video File (.mp4)</label>
+            <input type="file" name="video_file" accept="video/mp4,video/webm" required>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Thumbnail Image (.jpg, .png)</label>
+            <input type="file" name="thumb_file" accept="image/jpeg,image/png" required>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 10px; font-weight: bold;">Publish Video</button>
+    </form>
+</div>
+{% endblock %}

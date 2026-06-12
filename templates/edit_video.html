@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border: 1px solid #ccc;">
+    <h2>⚙️ Edit Video Settings</h2>
+    <p style="color: #666; font-size: 13px;">Modify metadata settings, adjust scheduling properties, or execute data removal operations for your file upload.</p>
+    <hr>
+    
+    <form method="POST" action="/video/{{ video.id }}/edit" enctype="multipart/form-data">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Video Title</label>
+            <input type="text" name="title" value="{{ video.title }}" required style="width: 100%; padding: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Category</label>
+            <select name="category" style="width: 100%; padding: 8px;">
+                <option value="Entertainment" {% if video.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                <option value="Gaming" {% if video.category == 'Gaming' %}selected{% endif %}>Gaming</option>
+                <option value="Music" {% if video.category == 'Music' %}selected{% endif %}>Music</option>
+                <option value="Tech" {% if video.category == 'Tech' %}selected{% endif %}>Tech</option>
+                <option value="Education" {% if video.category == 'Education' %}selected{% endif %}>Education</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Visibility / Privacy</label>
+            <select name="visibility" style="width: 100%; padding: 8px;">
+                <option value="public" {% if video.visibility == 'public' %}selected{% endif %}>Public (Everyone can search and view)</option>
+                <option value="unlisted" {% if video.visibility == 'unlisted' %}selected{% endif %}>Unlisted (Hidden from search/channel)</option>
+                <option value="private" {% if video.visibility == 'private' %}selected{% endif %}>Private (Only you can view)</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px; border: 1px dashed #0033cc; padding: 10px; background: #f0f4ff;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #0033cc;">⏰ Adjust Publication Schedule</label>
+            <input type="datetime-local" name="scheduled_time" value="{{ sched_str }}" style="width: 100%; padding: 6px;">
+            <small style="color: #666; display: block; margin-top: 4px;">Clear or leave empty to bypass scheduling restrictions and publish immediately.</small>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Description</label>
+            <textarea name="desc" rows="5" style="width: 100%; padding: 8px;">{{ video.desc }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Replace Thumbnail Image (Optional)</label>
+            <input type="file" name="thumb_file" accept="image/jpeg,image/png">
+            <p style="margin: 5px 0 0 0; font-size: 11px; color:#777;">Current preview image file path configuration: <code>{{ video.thumb }}</code></p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="flex-grow: 1; padding: 10px; font-weight: bold; background: #0033cc; color: white; border: 1px solid #002288; cursor: pointer;">Save Changes</button>
+            <a href="/watch/{{ video.id }}" style="padding: 10px; text-align: center; background: #e0e0e0; border: 1px solid #aaa; color: black; font-weight: bold;">Cancel</a>
+        </div>
+    </form>
+
+    <div style="margin-top: 35px; padding: 15px; border: 1px solid #cc0000; background: #fff5f5;">
+        <h4 style="margin: 0 0 5px 0; color: #cc0000; font-size: 16px;">⚠️ Danger Zone</h4>
+        <p style="margin: 0 0 15px 0; font-size: 12px; color: #555;">Deleting this video is permanent. It will instantly remove all view records, comments, files, and references from the system database.</p>
+        
+        <form method="POST" action="/video/{{ video.id }}/delete" onsubmit="return confirm('Are you absolutely sure you want to permanently delete this video? This operation cannot be undone.');">
+            <button type="submit" style="width: 100%; padding: 8px; background: #cc0000; color: white; font-weight: bold; border: 1px solid #990000; cursor: pointer;">Delete This Video</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

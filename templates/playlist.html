@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="background: white; border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+    <h1 style="margin: 0;">Playlist: {{ playlist.title }}</h1>
+    <p style="color: #666; margin-top: 5px;">Created by <a href="/channel/{{ playlist.author.username }}">{{ playlist.author.username }}</a> • {{ playlist.videos|length }} Videos</p>
+</div>
+
+<div id="videoFeed">
+    {% for video in playlist.videos %}
+    <div class="video-card" style="margin-bottom: 20px;">
+        <a href="/watch/{{ video.id }}">
+            <img src="{{ video.thumb }}" alt="Thumbnail" class="video-thumbnail">
+        </a>
+        <div class="video-info" style="display: flex; gap: 10px; margin-top: 10px;">
+            <a href="/channel/{{ video.author.username }}">
+                {% if video.author.pfp %}
+                    <img src="{{ video.author.pfp }}" class="pfp-tiny" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                    <div class="pfp-tiny" style="width: 36px; height: 36px; border-radius: 50%; background-color: #ccc;"></div>
+                {% endif %}
+            </a>
+            <div>
+                <a href="/watch/{{ video.id }}" style="color: black;"><h3 class="video-title" style="margin: 0; font-size: 14px; line-height: 1.2;">{{ video.title }}</h3></a>
+                <div class="video-meta" style="font-size: 12px; color: #666; margin-top: 4px;">
+                    <a href="/channel/{{ video.author.username }}" style="color: #666; font-weight: bold;">{{ video.author.username }}</a><br>
+                    {{ video.views }} views • {{ video.date }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>There are no videos in this playlist yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

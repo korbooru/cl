@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div id="videoFeed" style="grid-template-columns: 1fr;">
+        <div class="video-card">
+            <video class="video-player" controls>
+                <source src="{{ video.vid_url }}" type="video/mp4">
+                Your browser does not support HTML video.
+            </video>
+
+            <div class="video-info">
+                <h1 class="video-title" style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 5px 0;">
+                    <span>{{ video.title }}</span>
+                    {% if current_user.is_authenticated and current_user.id == video.user_id %}
+                        <a href="/video/{{ video.id }}/edit" style="font-size: 12px; font-weight: bold; background: #e0e0e0; border: 1px solid #aaa; padding: 3px 8px; color: #000; text-shadow: 0 1px 0 #fff; border-radius: 3px;">⚙️ Edit / Delete Settings</a>
+                    {% endif %}
+                </h1>
+
+                <div class="video-meta">
+                    <span>{{ video.views }} views</span> • 
+                    <span>{{ video.date }}</span> • 
+                    <strong>Category: {{ video.category }}</strong>
+                    {% if video.scheduled_at %}
+                        • <span style="color:#0033cc; font-weight:bold;">⏰ Scheduled: {{ video.scheduled_at.strftime('%Y-%b-%d %H:%M') }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="rate-bar rating-group" data-id="{{ video.id }}" data-type="video" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="rate-btn like-btn" onclick="toggleRating(this, 'like')">
+                        👍 Like (<span class="count">{{ video.likes }}</span>)
+                    </button>
+                    <button class="rate-btn dislike-btn" onclick="toggleRating(this, 'dislike')">
+                        👎 Dislike (<span class="count">{{ video.dislikes }}</span>)
+                    </button>
+
+                    <form action="/action/report" method="POST" style="display: inline-flex; align-items: center; gap: 4px; border-left: 1px solid #ccc; padding-left: 10px;">
+                        <input type="hidden" name="item_type" value="video">
+                        <input type="hidden" name="item_id" value="{{ video.id }}">
+                        <select name="reason" required style="padding: 2px; font-size: 12px;">
+                            <option value="" disabled selected>Report Video...</option>
+                            <option value="NSFW / Explicit Content">NSFW / Explicit Content</option>
+                            <option value="Misinformation">Misinformation</option>
+                            <option value="Harassment / Hate Speech">Harassment / Hate Speech</option>
+                            <option value="Spam / Scams">Spam / Scams</option>
+                        </select>
+                        <button type="submit" style="padding: 2px 6px; font-size: 11px;">Flag</button>
+                    </form>
+                    
+                    {% if current_user.is_authenticated %}
+                    <div style="border-left: 1px solid #ccc; padding-left: 10px; display: flex; gap: 10px; align-items: center;">
+                        <form action="/playlist/add" method="POST" style="margin: 0; display: flex; gap: 5px;">
+                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                            <select name="playlist_id" style="padding: 2px;">
+                                <option disabled selected>Select Playlist</option>
+                                {% for playlist in user_playlists %}
+                                    <option value="{{ playlist.id }}">{{ playlist.title }} ({% if playlist.visibility == 'public' %}Public{% elif playlist.visibility == 'unlisted' %}Unlisted{% else %}Private{% endif %})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" style="padding: 2px 8px;">Add</button>
+                        </form>
+                        
+                        <form action="/playlist/create" method="POST" style="margin: 0; display: flex; gap: 5px; align-items: center;">
+                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                            <input type="text" name="title" placeholder="New playlist name..." required style="padding: 2px; width: 130px;">
+                            <select name="visibility" style="padding: 2px;">
+                                <option value="public">Public</option>
+                                <option value="unlisted">Unlisted</option>
+                                <option value="private">Private</option>
+                            </select>
+                            <button type="submit" style="padding: 2px 8px;">Create</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="uploader-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        {% if video.author.pfp %}
+                            <img src="{{ video.author.pfp }}" class="pfp-small" style="object-fit: cover;">
+                        {% else %}
+                            <div class="pfp-small" style="background-color: #ddd;"></div>
+                        {% endif %}
+                        <strong><a href="/channel/{{ video.author.username }}">{{ video.author.username }}</a></strong>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != video.user_id %}
+                    <button id="subBtn" class="subscribe-btn {% if is_subbed %}subbed{% endif %}" onclick="toggleSubscribe('{{ video.user_id }}')">
+                        {% if is_subbed %}Subscribed{% else %}Subscribe{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="video-desc">
+                    {{ video.desc }}
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <h3>Comments</h3>
+                
+                {% if current_user.is_authenticated %}
+                <form action="/action/comment" method="POST" class="comment-form">
+                    <input type="hidden" name="video_id" value="{{ video.id }}">
+                    <div class="pfp-tiny"></div>
+                    <input type="text" name="text" placeholder="Add a public comment as {{ current_user.username }}..." required>
+                    <button type="submit">Post</button>
+                </form>
+                {% else %}
+                <p style="margin-bottom: 20px;"><a href="/login">Sign in</a> to leave a comment.</p>
+                {% endif %}
+                
+                {% macro render_comment_thread(comment, depth=0) %}
+                <div class="thread-wrapper" style="{% if depth > 0 %}margin-left: 35px; border-left: 2px solid #ddd; padding-left: 10px; margin-top: 10px;{% endif %}">
+                    <div class="comment" style="{% if depth > 0 %}border-bottom: none; margin-bottom: 0; padding-bottom: 0;{% endif %}">
+                        <div class="comment-header" style="display: flex; align-items: center; gap: 8px;">
+                            {% if comment.user and comment.user.pfp %}
+                                <img src="{{ comment.user.pfp }}" class="pfp-tiny" style="object-fit: cover; border-radius: 50%; width: 25px; height: 25px;">
+                            {% else %}
+                                <div class="pfp-tiny" style="background-color: #ddd; border-radius: 50%; width: 25px; height: 25px;"></div>
+                            {% endif %}
+                            <strong><a href="/channel/{{ comment.username_cache }}">{{ comment.username_cache }}</a></strong> • {{ comment.time_str }}
+                        </div>
+                        
+                        <div class="comment-text" id="text-{{ comment.id }}">{{ comment.text }}</div>
+                        
+                        <form action="/action/edit_comment" method="POST" class="edit-form hidden" id="edit-form-{{ comment.id }}" style="margin-bottom: 5px;">
+                            <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                            <input type="text" name="new_text" value="{{ comment.text }}" required style="width: 100%; font-size: 13px; padding: 4px; border: 1px solid #ccc;">
+                            <div style="margin-top: 5px;">
+                                <button type="submit" style="padding: 2px 8px;">Save</button>
+                                <button type="button" style="padding: 2px 8px;" onclick="toggleEditForm({{ comment.id }})">Cancel</button>
+                            </div>
+                        </form>
+                        
+                        <div class="rating-group" data-id="{{ comment.id }}" data-type="comment" style="margin-top: 5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <button class="rate-btn like-btn" style="padding: 2px 6px; font-size: 10px;" onclick="toggleRating(this, 'like')">
+                                👍 <span class="count">{{ comment.likes }}</span>
+                            </button>
+                            <button class="rate-btn dislike-btn" style="padding: 2px 6px; font-size: 10px;" onclick="toggleRating(this, 'dislike')">
+                                👎 <span class="count">{{ comment.dislikes }}</span>
+                            </button>
+                            <button class="reply-btn" onclick="toggleReplyForm({{ comment.id }}, '{% if depth > 0 %}@{{ comment.username_cache }} {% endif %}')">Reply</button>
+                            
+                            <form action="/action/report" method="POST" style="display: inline-flex; align-items: center; gap: 3px; margin: 0;">
+                                <input type="hidden" name="item_type" value="comment">
+                                <input type="hidden" name="item_id" value="{{ comment.id }}">
+                                <select name="reason" required style="font-size: 11px; padding: 1px;">
+                                    <option value="" disabled selected>Report...</option>
+                                    <option value="Inappropriate / NSFW text">Inappropriate / NSFW text</option>
+                                    <option value="Harassment / Toxicity">Harassment / Toxicity</option>
+                                    <option value="Spam Content">Spam Content</option>
+                                </select>
+                                <button type="submit" style="font-size: 10px; padding: 1px 4px; height: auto;">Flag</button>
+                            </form>
+
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.id == comment.user_id %}
+                                <button class="reply-btn" style="color: #666;" onclick="toggleEditForm({{ comment.id }})">Edit</button>
+                                {% endif %}
+                                
+                                {% if current_user.id == comment.user_id or current_user.id == video.user_id %}
+                                <form action="/action/delete_comment" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this comment? This will also delete all replies to it.');">
+                                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                    <input type="hidden" name="video_id" value="{{ video.id }}">
+                                    <button type="submit" class="reply-btn" style="color: #cc0000;">Delete</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        {% if current_user.is_authenticated %}
+                        <form action="/action/comment" method="POST" class="reply-form hidden" id="reply-form-{{ comment.id }}" style="margin-top: 10px; margin-left: 20px;">
+                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                            <input type="text" name="text" id="reply-input-{{ comment.id }}" placeholder="Write a reply..." required style="font-size: 11px;">
+                            <button type="submit">Post</button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    {% if comment.replies|length > 0 %}
+                    <div style="margin-top: 8px;">
+                        <button id="toggle-btn-{{ comment.id }}" onclick="toggleReplies({{ comment.id }}, {{ comment.replies|length }})" style="background: none; border: none; color: #0033CC; cursor: pointer; font-size: 11px; font-weight: bold; padding: 0;">
+                            ▼ View {{ comment.replies|length }} replies
+                        </button>
+                    </div>
+                    
+                    <div id="replies-{{ comment.id }}" class="hidden" style="margin-top: 5px;">
+                        {% for reply in comment.replies %}
+                            {{ render_comment_thread(reply, depth + 1) }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endmacro %}
+
+                {% for comment in comments %}
+                    {{ render_comment_thread(comment, 0) }}
+                {% else %}
+                    <div class="comment">
+                        <div class="comment-text">No comments yet. Be the first to comment!</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- RATING LOGIC (Connects to DB) ---
+        function toggleRating(clickedBtn, action) {
+            const group = clickedBtn.closest('.rating-group');
+            const itemId = group.getAttribute('data-id');
+            const itemType = group.getAttribute('data-type');
+            
+            const likeBtn = group.querySelector('.like-btn');
+            const dislikeBtn = group.querySelector('.dislike-btn');
+            const isLike = action === 'like';
+            
+            // Handle Visual Toggle
+            let isActive = false;
+            if (isLike) {
+                if (likeBtn) {
+                    isActive = !likeBtn.classList.contains('active-like');
+                    likeBtn.classList.toggle('active-like');
+                }
+                if (isActive && dislikeBtn && dislikeBtn.classList.contains('active-dislike')) {
+                    dislikeBtn.classList.remove('active-dislike');
+                    sendRatingToDB(itemType, itemId, 'dislike', false, dislikeBtn); // Undo dislike in DB
+                }
+            } else {
+                if (dislikeBtn) {
+                    isActive = !dislikeBtn.classList.contains('active-dislike');
+                    dislikeBtn.classList.toggle('active-dislike');
+                }
+                if (isActive && likeBtn && likeBtn.classList.contains('active-like')) {
+                    likeBtn.classList.remove('active-like');
+                    sendRatingToDB(itemType, itemId, 'like', false, likeBtn); // Undo like in DB
+                }
+            }
+
+            // Send actual interaction to the Python backend
+            sendRatingToDB(itemType, itemId, action, isActive, clickedBtn);
+        }
+
+        function sendRatingToDB(type, id, action, isActive, btnElement) {
+            fetch('/action/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type, id: id, action: action, active: isActive })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the visible number with the real number from the database
+                    const span = btnElement.querySelector('.count');
+                    if (span) {
+                        if (action === 'like') span.textContent = data.likes;
+                        if (action === 'dislike') span.textContent = data.dislikes;
+                    }
+                }
+            })
+            .catch(error => console.error("Error submitting rating:", error));
+        }
+
+        // --- SUBSCRIPTION LOGIC (Connects to DB) ---
+        function toggleSubscribe(channelId) {
+            const btn = document.getElementById('subBtn');
+            
+            fetch('/action/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel_id: channelId })
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data) return;
+                
+                if (data.status === 'subbed') {
+                    btn.classList.add('subbed');
+                    btn.textContent = 'Subscribed';
+                } else {
+                    btn.classList.remove('subbed');
+                    btn.textContent = 'Subscribe';
+                }
+            })
+            .catch(error => console.error("Error subscribing:", error));
+        }
+
+        // --- UI LOGIC (Replies & Editing) ---
+        function toggleReplyForm(threadId, tagUser = '') {
+            const form = document.getElementById('reply-form-' + threadId);
+            if (!form) {
+                window.location.href = '/login'; // Redirect if not signed in
+                return;
+            }
+            
+            const input = document.getElementById('reply-input-' + threadId);
+            
+            // Show the form
+            form.classList.remove('hidden');
+            
+            // Pre-fill the box with @username if replying to a specific sub-reply
+            if (tagUser) {
+                input.value = tagUser;
+            }
+            input.focus();
+        }
+
+        function toggleEditForm(commentId) {
+            const textDiv = document.getElementById('text-' + commentId);
+            const formDiv = document.getElementById('edit-form-' + commentId);
+            
+            if (textDiv) textDiv.classList.toggle('hidden');
+            if (formDiv) formDiv.classList.toggle('hidden');
+        }
+
+        // --- TOGGLE REPLIES VISIBILITY ---
+        function toggleReplies(commentId, replyCount) {
+            const container = document.getElementById('replies-' + commentId);
+            const btn = document.getElementById('toggle-btn-' + commentId);
+            
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                btn.textContent = '▲ Hide replies';
+            } else {
+                container.classList.add('hidden');
+                btn.textContent = `▼ View ${replyCount} replies`;
+            }
+        }
+    </script>
+{% endblock %}

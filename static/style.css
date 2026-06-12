@@ -1,0 +1,632 @@
+/* =========================================
+   CloudPlay - 2010 Retro Theme
+   ========================================= */
+
+/* Reset & Base Typography */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #EBEBEB; /* Classic light gray background */
+    font-family: Arial, Helvetica, sans-serif;
+    color: #333333;
+}
+
+a {
+    color: #0033CC; /* Classic Web Blue */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Hide Utility */
+.hidden {
+    display: none !important;
+}
+
+/* =========================================
+   Header & Navigation
+   ========================================= */
+header {
+    background-color: #FFFFFF;
+    background-image: linear-gradient(to bottom, #FFFFFF, #E4E4E4);
+    border-bottom: 1px solid #CCCCCC;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+}
+
+#navMenu {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.logo a {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 22px;
+    letter-spacing: -1px;
+    color: #000000;
+}
+
+/* =========================================
+   2010 Era Buttons
+   ========================================= */
+button {
+    background: #F8F8F8;
+    background: linear-gradient(to bottom, #FCFCFC, #D3D3D3);
+    border: 1px solid #C6C6C6;
+    border-radius: 3px;
+    color: #333333;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 6px 12px;
+    cursor: pointer;
+    text-shadow: 0 1px 0 #FFFFFF;
+}
+
+button:hover {
+    border-color: #999999;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    background: linear-gradient(to bottom, #F8F8F8, #C8C8C8);
+}
+
+button:active {
+    background: #D3D3D3;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   Main Container 
+   ========================================= */
+/* =========================================
+   Layout Expansion
+   ========================================= */
+/* Assuming a top margin of 20px, we make the side margins exactly 20px too */
+main {
+    margin: 20px auto;
+    width: calc(100% - 40px); /* Total width minus left & right margins (20px each) */
+    max-width: none; /* Removes any previous restrictions like 1000px */
+    background: var(--bg-primary, #FFFFFF);
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    min-height: calc(100vh - 40px); /* Keeps it stretched vertically */
+}
+
+/* Make headers in the new home feed span across the grid perfectly */
+.feed-section-title {
+    grid-column: 1 / -1;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--border-color, #E2E2E2);
+    padding-bottom: 5px;
+    font-size: 18px;
+    color: var(--text-primary, #333);
+}
+
+/* =========================================
+   Sidebar Styles
+   ========================================= */
+.sidebar-section {
+    background: var(--bg-secondary, #F9F9F9);
+    border: 1px solid var(--border-color, #E2E2E2);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 3px;
+}
+
+.sidebar-section h3 {
+    margin-top: 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color, #E2E2E2);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    color: var(--text-primary, #333);
+}
+
+.sidebar-section h3 a {
+    color: #0033CC;
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 12px;
+    float: right;
+}
+
+.sidebar-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-section li {
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px dotted var(--border-color, #CCC);
+}
+.sidebar-section li:last-child { border-bottom: none; }
+
+/* =========================================
+   Dark Mode Styles (Comprehensive)
+   ========================================= */
+body.dark-mode {
+    background-color: #121212;
+    color: #E0E0E0;
+    --bg-primary: #1E1E1E;
+    --bg-secondary: #252525;
+    --text-primary: #E0E0E0;
+    --text-secondary: #AAAAAA;
+    --border-color: #444444;
+}
+
+/* Links */
+body.dark-mode a { color: #79A3FF; }
+body.dark-mode .sidebar-section h3 a { color: #79A3FF; }
+
+/* Main Containers */
+body.dark-mode main, 
+body.dark-mode .edit-modal, 
+body.dark-mode .dropdown-content {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Video Cards & Sidebars */
+body.dark-mode .video-card {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .sidebar-section {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Lines & Dividers */
+body.dark-mode .feed-section-title,
+body.dark-mode .sidebar-section h3,
+body.dark-mode h2,
+body.dark-mode #pageHeader div,
+body.dark-mode .video-info > div,
+body.dark-mode .dropdown-content a,
+body.dark-mode .dropdown-content button {
+    border-color: var(--border-color) !important;
+}
+
+/* Text Colors (Dropdowns, Views, Comments, Descriptions) */
+body.dark-mode .dropdown-content a, 
+body.dark-mode .dropdown-content button {
+    color: var(--text-primary);
+}
+body.dark-mode .dropdown-content a:hover, 
+body.dark-mode .dropdown-content button:hover {
+    background-color: #333333;
+    color: #FFFFFF;
+}
+
+body.dark-mode .video-desc,
+body.dark-mode .comment-text,
+body.dark-mode .video-meta,
+body.dark-mode .rate-bar span,
+body.dark-mode small {
+    color: var(--text-secondary) !important;
+}
+
+/* Inputs & Forms */
+body.dark-mode input, 
+body.dark-mode textarea, 
+body.dark-mode select {
+    background-color: #333333;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Comments */
+body.dark-mode .comment, 
+body.dark-mode .reply {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* =========================================
+   Video Feed (Grid View)
+   ========================================= */
+#videoFeed {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.video-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.video-player {
+    width: 100%;
+    background-color: #000000;
+    border: 1px solid #999999;
+}
+
+.video-info {
+    padding: 5px 0;
+}
+
+.video-title {
+    font-size: 14px;
+    margin: 0 0 3px 0;
+    font-weight: bold;
+}
+
+.video-meta {
+    font-size: 11px;
+    color: #666666;
+    line-height: 1.4;
+}
+
+.video-desc {
+    font-size: 12px;
+    color: #333333;
+    margin-top: 5px;
+}
+
+/* =========================================
+   Single Video View Overrides
+   ========================================= */
+/* When JS sets the feed to 1fr, it triggers this single-video layout */
+#videoFeed[style*="1fr"] .video-player {
+    max-height: 480px; /* Classic 480p height */
+    margin-bottom: 10px;
+}
+
+#videoFeed[style*="1fr"] .video-title {
+    font-size: 22px;
+    font-weight: normal;
+    margin-bottom: 5px;
+}
+
+#videoFeed[style*="1fr"] .video-meta {
+    font-size: 13px;
+    border-bottom: 1px solid #E2E2E2;
+    padding-bottom: 10px;
+    display: block;
+}
+
+/* =========================================
+   Interactions (Likes / Dislikes)
+   ========================================= */
+.rate-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.rate-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+.active-like {
+    background: #E8F5E9 !important;
+    border-color: #4CAF50 !important;
+    color: #2E7D32 !important;
+}
+
+.active-dislike {
+    background: #FFEBEE !important;
+    border-color: #F44336 !important;
+    color: #C62828 !important;
+}
+
+.delete-btn {
+    margin-top: 10px;
+    color: #CC181E;
+}
+
+/* =========================================
+   Comments Section
+   ========================================= */
+.comments-section {
+    margin-top: 20px;
+}
+
+.comments-section h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+
+.comment-form, .reply-form {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.comment {
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #E2E2E2;
+    padding-bottom: 10px;
+}
+
+.comment-header {
+    font-size: 11px;
+    color: #666666;
+    margin-bottom: 3px;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: #333333;
+}
+
+.reply-btn {
+    background: none;
+    border: none;
+    color: #0033CC;
+    font-size: 11px;
+    font-weight: normal;
+    padding: 0;
+    margin-top: 5px;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+.reply-btn:hover {
+    background: none;
+    border: none;
+    box-shadow: none;
+    text-decoration: underline;
+}
+
+.reply {
+    margin-left: 30px;
+    margin-top: 10px;
+}
+
+/* =========================================
+   Forms (Auth & Uploads)
+   ========================================= */
+input[type="text"], input[type="password"], textarea, select {
+    padding: 6px;
+    border: 1px solid #CCCCCC;
+    border-top-color: #999999; /* Classic inset shadow look */
+    border-radius: 2px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    flex-grow: 1;
+}
+
+.auth-container, #uploadSection {
+    width: 100%;
+    max-width: 450px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #F8F8F8;
+    border: 1px solid #CCCCCC;
+    border-radius: 5px;
+}
+
+.auth-container h2, #uploadSection h2 {
+    margin-top: 0;
+    font-size: 18px;
+    border-bottom: 1px solid #E2E2E2;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#loginForm, #registerForm, #videoForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+/* =========================================
+   Thumbnails & Subscription Buttons
+   ========================================= */
+.video-thumbnail {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 1px solid #999999;
+    margin-bottom: 5px;
+}
+
+.uploader-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0 10px 0;
+}
+
+.subscribe-btn {
+    background: #F4C430; /* Classic 2010 Yellowish */
+    background: linear-gradient(to bottom, #FFE885, #FFCE25);
+    border: 1px solid #D69E31;
+    color: #333;
+    padding: 5px 12px;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.subscribe-btn:hover {
+    background: linear-gradient(to bottom, #FFDC6A, #FFBE00);
+    border-color: #C28B23;
+}
+
+.subscribe-btn.subbed {
+    background: #EEEEEE;
+    background: linear-gradient(to bottom, #FFFFFF, #E4E4E4);
+    border: 1px solid #CCCCCC;
+    color: #666;
+}
+
+.subscribe-btn.subbed:hover {
+    background: linear-gradient(to bottom, #F8F8F8, #C8C8C8);
+}
+/* =========================================
+   Creator Edit Modal
+   ========================================= */
+#editModalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#editModalOverlay:not(.hidden) {
+    display: flex;
+}
+
+/* =========================================
+   Playlist Modal
+   ========================================= */
+#playlistModalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#playlistModalOverlay:not(.hidden) {
+    display: flex;
+}
+
+.edit-modal {
+    background: #FFFFFF;
+    border: 1px solid #999999;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border-radius: 3px;
+}
+
+.edit-modal h2 {
+    margin-top: 0;
+    font-size: 18px;
+    border-bottom: 1px solid #E2E2E2;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#editForm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#editForm label {
+    font-weight: bold;
+    font-size: 12px;
+    color: #333;
+    margin-top: 5px;
+}
+
+/* Make textareas and selects look standard */
+#editForm input[type="text"], #editForm textarea, #editForm select {
+    width: 100%;
+}
+/* =========================================
+   Account Dropdown Menu
+   ========================================= */
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    padding: 6px 12px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #FFFFFF;
+    min-width: 140px;
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.2);
+    border: 1px solid #CCCCCC;
+    z-index: 1000; /* Ensure it stays on top of videos */
+}
+
+/* Show the dropdown menu on hover */
+.user-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Style the links and buttons inside the dropdown */
+.dropdown-content a, 
+.dropdown-content button {
+    color: #333333;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+    font-size: 12px;
+    font-weight: normal;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid #EBEBEB;
+    border-radius: 0;
+    box-shadow: none;
+    text-shadow: none;
+    cursor: pointer;
+}
+
+/* Remove bottom border from the last item (Logout) */
+.dropdown-content button:last-child {
+    border-bottom: none;
+}
+
+/* Hover effect for dropdown items */
+.dropdown-content a:hover, 
+.dropdown-content button:hover {
+    background-color: #F8F8F8;
+    color: #0033CC; /* Classic Web Blue */
+}
+/* =========================================
+   Profile Pictures
+   ========================================= */
+.pfp-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--border-color, #E2E2E2);
+    border: 1px solid var(--border-color, #CCC);
+    flex-shrink: 0;
+}
+
+.pfp-tiny {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--border-color, #E2E2E2);
+    border: 1px solid var(--border-color, #CCC);
+    flex-shrink: 0;
+}

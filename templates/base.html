@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPlay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/">CloudPlay</a>
+        </div>
+        
+        <form action="/search" method="GET" style="display: flex; flex: 1; max-width: 400px; margin: 0 20px;">
+            <input type="text" name="q" placeholder="Search videos and users..." required style="flex: 1; padding: 6px; border: 1px solid #ccc; font-size: 14px;">
+            <button type="submit" style="padding: 6px 15px; border-left: none;">Search</button>
+        </form>
+
+        <div id="navMenu">
+            {% if current_user.is_authenticated %}
+                <div class="user-dropdown" style="display: flex; align-items: center; gap: 8px;">
+                    {% if current_user.pfp %}
+                        <img src="{{ current_user.pfp }}" class="pfp-small" style="width: 30px; height: 30px; object-fit: cover;">
+                    {% else %}
+                        <div class="pfp-small" style="width: 30px; height: 30px; background-color: #ddd;"></div>
+                    {% endif %}
+                    
+                    <button class="dropdown-btn">{{ current_user.username }} ▼</button>
+                    <div class="dropdown-content">
+                        <a href="/channel/{{ current_user.username }}">My Channel</a>
+                        <a href="/upload">Upload Video</a>
+                        <a href="/settings">Settings</a>
+                        <a href="/logout">Sign Out</a>
+                    </div>
+                </div>
+            {% else %}
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="window.location.href='/login'">Sign In</button>
+                    <button onclick="window.location.href='/register'">Create Account</button>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+    <main style="padding: 20px;">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

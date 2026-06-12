@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="background: white; border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; gap: 15px;">
+            {% if channel_user.pfp %}
+                <img src="{{ channel_user.pfp }}" class="pfp-small" style="width: 80px; height: 80px; object-fit: cover;">
+            {% else %}
+                <div class="pfp-small" style="width: 80px; height: 80px; background-color: #ddd;"></div>
+            {% endif %}
+            
+            <div>
+                <h1 style="margin: 0; font-size: 24px;">{{ channel_user.username }}'s Channel</h1>
+                <p style="color: #666; margin-top: 5px; font-size: 14px;">{{ sub_count }} Subscribers</p>
+                {% if channel_user.bio %}
+                <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc; font-size: 13px; max-width: 600px;">
+                    {{ channel_user.bio }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if current_user.is_authenticated and current_user.id != channel_user.id %}
+        <button id="subBtn" class="subscribe-btn {% if is_subbed %}subbed{% endif %}" onclick="toggleSubscribe('{{ channel_user.id }}')" style="padding: 8px 15px; font-size: 14px;">
+            {% if is_subbed %}Subscribed{% else %}Subscribe{% endif %}
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="feed-section-title">Uploads</h2>
+<div id="videoFeed" style="margin-bottom: 40px;">
+    {% for video in videos %}
+    <div class="video-card">
+        <a href="/watch/{{ video.id }}">
+            <img src="{{ video.thumb }}" alt="Thumbnail" class="video-thumbnail">
+        </a>
+        <div class="video-info" style="display: flex; gap: 10px; margin-top: 10px;">
+            <div>
+                <a href="/watch/{{ video.id }}" style="color: black;"><h3 class="video-title" style="margin:0; font-size: 14px;">{{ video.title }}</h3></a>
+                <div class="video-meta" style="font-size: 12px; color: #666; margin-top: 4px;">
+                    {{ video.views }} views • {{ video.date }}
+                    {% if current_user.is_authenticated and current_user.id == channel_user.id %}
+                        <br><strong style="color: #c00;">({{ video.visibility|capitalize }})</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; background: white; border: 1px solid #ccc; padding: 20px;">
+        <p style="margin: 0; color: #666;">No videos available.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<h2 class="feed-section-title">Playlists</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+    {% for playlist in playlists %}
+    <div style="background: white; border: 1px solid #ccc; padding: 15px; position: relative;">
+        <div style="background: #e0e0e0; height: 10px; margin-bottom: 4px; border: 1px solid #ccc;"></div>
+        <h3 style="margin: 0; font-size: 15px;"><a href="/playlist/{{ playlist.id }}">{{ playlist.title }}</a></h3>
+        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+            {{ playlist.videos|length }} videos
+            {% if current_user.is_authenticated and current_user.id == channel_user.id %}
+                <br><strong style="color: #03c;">({{ playlist.visibility|capitalize }})</strong>
+            {% endif %}
+        </p>
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; background: white; border: 1px solid #ccc; padding: 20px;">
+        <p style="margin: 0; color: #666;">No playlists available.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function toggleSubscribe(channelId) {
+        const btn = document.getElementById('subBtn');
+        fetch('/action/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ channel_id: channelId })
+        })
+        .then(response => {
+            if (response.status === 401) { window.location.href = '/login'; return; }
+            return response.json();
+        })
+        .then(data => {
+            if (!data) return;
+            if (data.status === 'subbed') { btn.classList.add('subbed'); btn.textContent = 'Subscribed'; }
+            else { btn.classList.remove('subbed'); btn.textContent = 'Subscribe'; }
+        })
+        .catch(error => console.error("Error subscribing:", error));
+    }
+</script>
+{% endblock %}

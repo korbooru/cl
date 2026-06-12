@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 40px auto; background: #FFFFFF; border: 1px solid #CCCCCC; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="margin-top: 0; font-family: Arial, sans-serif; border-bottom: 1px solid #EEEEEE; padding-bottom: 10px;">Sign In</h2>
+    <form method="POST" action="/login">
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Username or Email</label>
+            <input type="text" name="username" required style="width: 100%; padding: 6px; border: 1px solid #CCCCCC; font-size: 13px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Password</label>
+            <input type="password" name="password" required style="width: 100%; padding: 6px; border: 1px solid #CCCCCC; font-size: 13px;">
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 8px; font-weight: bold; background: #F8F8F8; border: 1px solid #CCCCCC; cursor: pointer; text-shadow: 0 1px 0 #FFF;">Log In</button>
+    </form>
+    <div style="margin-top: 20px; font-size: 11px; text-align: center; border-top: 1px dashed #DDD; padding-top: 12px; display: flex; justify-content: space-between;">
+        <a href="/forgot-password" style="color: #666;">❓ Forgot Password?</a>
+        <a href="/register">Create new account</a>
+    </div>
+</div>
+{% endblock %}
