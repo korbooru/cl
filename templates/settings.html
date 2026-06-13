@@ -2,42 +2,42 @@
 
 {% block content %}
 <div style="max-width: 550px; margin: 30px auto; background: white; padding: 25px; border: 1px solid #CCCCCC; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-    <h2 style="margin-top:0; border-bottom: 1px solid #EBEBEB; padding-bottom: 10px;">Profile Identity Parameters</h2>
+    <h2 style="margin-top:0; border-bottom: 1px solid #EBEBEB; padding-bottom: 10px;">Settings</h2>
     
     <form method="POST" action="/settings" enctype="multipart/form-data">
         
         <div style="margin-bottom: 15px; background: #F9F9F9; padding: 10px; border: 1px solid #EAEAEA;">
-            <label style="display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #0033CC;">⭐ Public Display Name</label>
+            <label style="display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #0033CC;">Display Name</label>
             <input type="text" name="display_name" value="{{ current_user.display_name }}" required style="width: 100%; padding: 6px; border: 1px solid #CCC;">
-            <small style="color: #666; display:block; margin-top:3px;">Can be altered at any point. Changes how your profile displays across comments and watches.</small>
+            <small style="color: #666; display:block; margin-top:3px;">Can be altered at any point. Changes how your profile displays across comments, videos, playlists, and searches.</small>
         </div>
 
         <div style="margin-bottom: 15px; background: #FFF5F5; padding: 10px; border: 1px solid #FFD3D3;">
-            <label style="display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #A00000;">🔗 Unique Channel Username Handle (URL Path)</label>
+            <label style="display: block; font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #A00000;">Channel Handle</label>
             <input type="text" name="username" value="{{ current_user.username }}" required style="width: 100%; padding: 6px; border: 1px solid #CCC; font-family: monospace;">
             <small style="color: #555; display:block; margin-top:3px; margin-bottom: 8px;"><strong>Warning:</strong> Changing this alters your permanent custom URL location channel route link path: <code>/channel/{{ current_user.username }}</code>.</small>
             
             <div style="border-top: 1px dashed #FFD3D3; padding-top: 8px; margin-top: 5px;">
-                <label style="display: block; font-size: 12px; font-weight: bold; color: #CC0000; margin-bottom: 3px;">🔒 Confirm Password to Alter Handle Username</label>
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #CC0000; margin-bottom: 3px;">Confirm Password</label>
                 <input type="password" name="current_password" placeholder="Enter password to authorize handle changes..." style="width: 100%; padding: 5px; border: 1px solid #CC9999; font-size: 12px;">
             </div>
         </div>
 
         <div style="margin-bottom: 15px;">
-            <label style="display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px;">Profile Bio Narrative</label>
+            <label style="display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px;">About Me</label>
             <textarea name="bio" rows="4" style="width: 100%; padding: 6px; border: 1px solid #CCC; font-family: Arial, sans-serif; font-size: 13px;">{{ current_user.bio }}</textarea>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <label style="display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px;">Replace Channel Avatar Image (.jpg, .png)</label>
+            <label style="display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px;">Profile Picture (.jpg, .png)</label>
             <input type="file" name="pfp_file" accept="image/jpeg,image/png">
             {% if current_user.pfp %}
-                <p style="font-size:11px; color:#555; margin: 4px 0 0 0;">Current Asset File: <code>{{ current_user.pfp }}</code></p>
+                <p style="font-size:11px; color:#555; margin: 4px 0 0 0;">Current Image: <code>{{ current_user.pfp }}</code></p>
             {% endif %}
         </div>
 
         <div style="display: flex; gap: 10px; border-top: 1px solid #EEE; padding-top: 15px;">
-            <button type="submit" style="padding: 8px 20px; font-weight: bold; background: #F0F0F0; border: 1px solid #BBB; cursor: pointer;">Commit Settings</button>
+            <button type="submit" style="padding: 8px 20px; font-weight: bold; background: #F0F0F0; border: 1px solid #BBB; cursor: pointer;">Save Settings</button>
             <a href="/channel/{{ current_user.username }}" style="padding: 8px 15px; background: transparent; border: 1px solid #CCC; color: #333; font-size: 13px; text-align: center;">Cancel</a>
         </div>
     </form>
