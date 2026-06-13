@@ -10,7 +10,7 @@ from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key-change-this'
@@ -129,6 +129,22 @@ class Report(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) 
     reason = db.Column(db.String(100), nullable=False)
     date_reported = db.Column(db.DateTime, default=datetime.now)
+
+class RateTracker(db.Model):
+    __tablename__ = 'rate_tracker'
+    id = db.Column(db.Integer, primary_key=True)
+    item_type = db.Column(db.String(20), nullable=False) # 'video' or 'comment'
+    item_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(10), nullable=False) # 'like' or 'dislike'
+
+class ViewTracker(db.Model):
+    __tablename__ = 'view_tracker'
+    id = db.Column(db.Integer, primary_key=True)
+    video_id = db.Column(db.Integer, db.ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    ip_address = db.Column(db.String(50), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
 
 with app.app_context():
     db.create_all()
