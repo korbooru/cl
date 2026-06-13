@@ -1,6 +1,9 @@
 import os
 import random
 import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
@@ -12,17 +15,36 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key-change-this'
 
+# --- OUTLOOK SMTP CONFIGURATION ---
+APP_EMAIL = "cloudplay-no.reply@outlook.com"
+APP_EMAIL_PASSWORD = "Abomasnow1309"
+DOMAIN_NAME = "xanuran.pythonanywhere.com"
+
+def send_automated_email(to_email, subject, body):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = APP_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+
+        # Connect to Microsoft's Office365 SMTP server (Whitelisted on PythonAnywhere)
+        server = smtplib.SMTP('smtp.office365.com', 587)
+        server.starttls()
+        server.login(APP_EMAIL, APP_EMAIL_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print(f"Failed to send email to {to_email}. Error: {e}")
+
 # --- SAFE PATHWAY RESOLUTION FOR PYTHONANYWHERE / PRODUCTION ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 db_dir = '/app/data'
 if not os.path.exists(db_dir):
-    # If the Wasmer directory doesn't exist, build a 'data' folder inside your app folder
-    db_dir = os.path.join(BASE_DIR, 'data')
-    if not os.path.exists(db_dir):
-        try:
-            os.makedirs(db_dir)
-        except Exception:
-            db_dir = BASE_DIR
+    try:
+        os.makedirs(db_dir)
+    except Exception:
+        db_dir = os.getcwd()
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(db_dir, 'cloudplay.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -135,6 +157,7 @@ def register():
         hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
         verification_token = secrets.token_hex(16)
         
+        # Initially, public display_name mirrors the unique handle path name
         new_user = User(
             username=username, 
             display_name=username, 
@@ -146,14 +169,19 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         
-        # Simulated Terminal Log Output for Verification Link
-        print("\n" + "═"*60)
-        print(f"📧 CLOUDPLAY VERIFICATION EMAIL SENT TO: {email}")
-        print(f"Click the link below to verify your account registration:")
-        print(f"https://yourusername.pythonanywhere.com/verify-email/{verification_token}")
-        print("═"*60 + "\n")
+        # ACTUALLY SEND THE EMAIL
+        verification_link = f"https://{DOMAIN_NAME}/verify-email/{verification_token}"
+        email_subject = "CloudPlay - Verify Your Account"
+        email_body = f"""
+        <h2>Welcome to CloudPlay!</h2>
+        <p>Please confirm your email address by clicking the link below:</p>
+        <p><a href="{verification_link}">{verification_link}</a></p>
+        <p>If you did not create this account, please ignore this email.</p>
+        """
         
-        flash("Registration complete! An email verification link was sent. Check your logs to verify your account.")
+        send_automated_email(email, email_subject, email_body)
+        
+        flash("Registration complete! An email verification link was sent to your inbox.")
         return redirect(url_for('login'))
         
     return render_template('register.html')
@@ -176,9 +204,11 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        # Look up the profile using either their unique handle or email address
         user = User.query.filter(or_(User.username == username, User.email == username)).first()
         
         if user and check_password_hash(user.password, password):
+            # CRITICAL CHECK: Block access if email is unverified
             if not user.is_verified:
                 flash("Access Denied: Your email address has not been verified yet. Please use the activation link sent to your registration email address.")
                 return redirect(url_for('login'))
@@ -197,17 +227,23 @@ def forgot_password():
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
         if user:
+            # Generate a clean 8-digit numerical recovery token string
             code = "".join([str(random.randint(0, 9)) for _ in range(8)])
             user.reset_code = code
             db.session.commit()
             
-            # Simulated Terminal Log Output for Password Recovery Code
-            print("\n" + "═"*60)
-            print(f"🔑 CLOUDPLAY PASSWORD RECOVERY SYSTEM FOR: {email}")
-            print(f"Your temporary 8-digit security access token is: {code}")
-            print("═"*60 + "\n")
+            # ACTUALLY SEND THE RESET CODE EMAIL
+            email_subject = "CloudPlay - Password Recovery Code"
+            email_body = f"""
+            <h2>CloudPlay Account Recovery</h2>
+            <p>A password reset was requested for your account.</p>
+            <p>Your 8-digit temporary security access token is: <strong><span style="font-size: 20px; color: #cc0000;">{code}</span></strong></p>
+            <p>If you did not request this, you can safely ignore this email.</p>
+            """
             
-            flash("An 8-digit validation code has been dispatched. Please inspect your terminal logs.")
+            send_automated_email(email, email_subject, email_body)
+            
+            flash("An 8-digit validation code has been sent to your email inbox.")
             return redirect(url_for('reset_password', email=email))
         flash("No user record could be identified matching that email address.")
     return render_template('forgot_password.html')
@@ -245,11 +281,13 @@ def settings():
         new_bio = request.form.get('bio')
         pfp_file = request.files.get('pfp_file')
         
+        # 1. Update Display Name (Can be performed immediately at any point)
         if new_display_name:
             current_user.display_name = new_display_name
             for comment in Comment.query.filter_by(user_id=current_user.id).all():
                 comment.username_cache = new_display_name
 
+        # 2. Update Channel Handle Username (Requires explicit password validation lock)
         if new_username and new_username != current_user.username:
             if not current_password or not check_password_hash(current_user.password, current_password):
                 flash("Error: You must provide your correct password to alter your unique channel handle name.")
