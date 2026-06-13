@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Top 100 Most Subscribed Channels</h1>
+    <ol>
+        {% for channel_user, subscriber_count in channels %}
+            <li>
+                <a href="{{ url_for('channel', username=channel_user.username) }}">
+                    {{ channel_user.display_name }}
+                </a> 
+                - {{ subscriber_count }} Subscribers
+            </li>
+        {% endfor %}
+    </ol>
+{% endblock %}
