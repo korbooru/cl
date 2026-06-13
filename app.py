@@ -15,27 +15,23 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key-change-this'
 
-# --- OUTLOOK SMTP CONFIGURATION ---
-APP_EMAIL = "cloudplay-no.reply@outlook.com"
-APP_EMAIL_PASSWORD = "Abomasnow1309"
+# --- MOCK EMAIL CONFIGURATION (Bypasses Firewalls & Phone Verification) ---
 DOMAIN_NAME = "xanuran.pythonanywhere.com"
 
 def send_automated_email(to_email, subject, body):
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = APP_EMAIL
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
-
-        # Connect to Microsoft's Office365 SMTP server (Whitelisted on PythonAnywhere)
-        server = smtplib.SMTP('smtp.office365.com', 587)
-        server.starttls()
-        server.login(APP_EMAIL, APP_EMAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-    except Exception as e:
-        print(f"Failed to send email to {to_email}. Error: {e}")
+    """
+    Instead of crashing against the PythonAnywhere firewall, this function
+    intercepts the email and prints it beautifully into your Server Log.
+    """
+    print("\n" + "═"*60)
+    print("📧 MOCK EMAIL INTERCEPTED BY SERVER LOGS")
+    print(f"TO: {to_email}")
+    print(f"SUBJECT: {subject}")
+    print("CONTENT:")
+    # Strip basic HTML tags just to make the log easier to read
+    clean_body = body.replace('<h2>', '').replace('</h2>', '\n').replace('<p>', '').replace('</p>', '\n').replace('<br>', '\n')
+    print(clean_body)
+    print("═"*60 + "\n")
 
 # --- SAFE PATHWAY RESOLUTION FOR PYTHONANYWHERE / PRODUCTION ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
