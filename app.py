@@ -567,11 +567,52 @@ def report_item():
 
 @app.route('/action/rate', methods=['POST'])
 def rate():
+    # Require login to rate so we can track the account
+    if not current_user.is_authenticated:
+        return jsonify({'success': False, 'error': 'Must be logged in to rate.'}), 401
+        
     data = request.json
-    item = Video.query.get(data.get('id')) if data.get('type') == 'video' else Comment.query.get(data.get('id'))
-    if not item: return jsonify({'error': 'Not found'}), 404
-    if data.get('action') == 'like': item.likes += 1 if data.get('active') else -1
-    elif data.get('action') == 'dislike': item.dislikes += 1 if data.get('active') else -1
+    item_type = data.get('type')
+    item_id = data.get('id')
+    action = data.get('action') # 'like' or 'dislike'
+    active = data.get('active') # True (adding) or False (removing)
+    
+    item = Video.query.get(item_id) if item_type == 'video' else Comment.query.get(item_id)
+    if not item: 
+        return jsonify({'error': 'Not found'}), 404
+        
+    # Look for a previous rating by this exact user on this exact item
+    existing_rate = RateTracker.query.filter_by(
+        item_type=item_type, item_id=item_id, user_id=current_user.id
+    ).first()
+    
+    if active: # User is trying to ADD a like/dislike
+        if existing_rate:
+            if existing_rate.action == action:
+                pass # They already rated this exact way, do nothing
+            else:
+                # They are switching sides (e.g., changing a dislike into a like)
+                if existing_rate.action == 'like':
+                    item.likes = max(0, item.likes - 1)
+                else:
+                    item.dislikes = max(0, item.dislikes - 1)
+                    
+                existing_rate.action = action
+                if action == 'like': item.likes += 1
+                else: item.dislikes += 1
+        else:
+            # First time rating this item
+            new_rate = RateTracker(item_type=item_type, item_id=item_id, user_id=current_user.id, action=action)
+            db.session.add(new_rate)
+            if action == 'like': item.likes += 1
+            else: item.dislikes += 1
+            
+    else: # User is toggling OFF their like/dislike
+        if existing_rate and existing_rate.action == action:
+            db.session.delete(existing_rate)
+            if action == 'like': item.likes = max(0, item.likes - 1)
+            else: item.dislikes = max(0, item.dislikes - 1)
+            
     db.session.commit()
     return jsonify({'success': True, 'likes': item.likes, 'dislikes': item.dislikes})
 
