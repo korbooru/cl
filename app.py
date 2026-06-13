@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -74,6 +74,12 @@ class User(UserMixin, db.Model):
     pfp = db.Column(db.String(200), default="")
     videos = db.relationship('Video', backref='author', lazy=True)
     playlists = db.relationship('Playlist', backref='author', lazy=True)
+
+class UserSettings(db.Model):
+    __tablename__ = 'user_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
+    dark_mode = db.Column(db.Boolean, default=False)
 
 playlist_video = db.Table('playlist_video',
     db.Column('playlist_id', db.Integer, db.ForeignKey('playlist.id'), primary_key=True),
@@ -149,6 +155,19 @@ class ViewTracker(db.Model):
 with app.app_context():
     db.create_all()
 
+
+# =========================================
+# Global Context Processors (Dark Mode)
+# =========================================
+@app.context_processor
+def inject_user_settings():
+    if current_user.is_authenticated:
+        settings = UserSettings.query.filter_by(user_id=current_user.id).first()
+        is_dark = settings.dark_mode if settings else False
+        return dict(dark_mode=is_dark)
+    return dict(dark_mode=False)
+
+
 # =========================================
 # Authentication & Verification Systems
 # =========================================
@@ -169,7 +188,6 @@ def register():
         hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
         verification_token = secrets.token_hex(16)
         
-        # Initially, public display_name mirrors the unique handle path name
         new_user = User(
             username=username, 
             display_name=username, 
@@ -179,6 +197,10 @@ def register():
             verification_token=verification_token
         )
         db.session.add(new_user)
+        db.session.commit()
+        
+        # Initialize default settings for the new user
+        db.session.add(UserSettings(user_id=new_user.id))
         db.session.commit()
         
         # ACTUALLY SEND THE EMAIL
@@ -286,20 +308,28 @@ def logout():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    u_settings = UserSettings.query.filter_by(user_id=current_user.id).first()
+    if not u_settings:
+        u_settings = UserSettings(user_id=current_user.id)
+        db.session.add(u_settings)
+        db.session.commit()
+
     if request.method == 'POST':
+        # --- APPEARANCE SETTINGS ---
+        u_settings.dark_mode = 'dark_mode' in request.form
+        
+        # --- ACCOUNT SETTINGS ---
         new_display_name = request.form.get('display_name')
         new_username = request.form.get('username')
         current_password = request.form.get('current_password')
         new_bio = request.form.get('bio')
         pfp_file = request.files.get('pfp_file')
         
-        # 1. Update Display Name (Can be performed immediately at any point)
         if new_display_name:
             current_user.display_name = new_display_name
             for comment in Comment.query.filter_by(user_id=current_user.id).all():
                 comment.username_cache = new_display_name
 
-        # 2. Update Channel Handle Username (Requires explicit password validation lock)
         if new_username and new_username != current_user.username:
             if not current_password or not check_password_hash(current_user.password, current_password):
                 flash("Error: You must provide your correct password to alter your unique channel handle name.")
@@ -323,11 +353,29 @@ def settings():
         flash("Profile parameters adjusted successfully.")
         return redirect(url_for('channel', username=current_user.username))
         
-    return render_template('settings.html')
+    return render_template('settings.html', u_settings=u_settings)
 
 # =========================================
-# Search & Playlists
+# Lists & Discovery Routes
 # =========================================
+@app.route('/subscriptions')
+@login_required
+def subscriptions_list():
+    """Full A-Z List of Your Subscriptions"""
+    sub_ids = [sub.channel_id for sub in Subscription.query.filter_by(subscriber_id=current_user.id).all()]
+    subs = User.query.filter(User.id.in_(sub_ids)).order_by(User.display_name.asc()).all()
+    return render_template('subscriptions_list.html', subs=subs)
+
+@app.route('/top-channels')
+def top_channels_list():
+    """Top 100 Most Subscribed Channels"""
+    top_100 = db.session.query(User, func.count(Subscription.id).label('sub_count'))\
+        .outerjoin(Subscription, Subscription.channel_id == User.id)\
+        .group_by(User.id)\
+        .order_by(func.count(Subscription.id).desc())\
+        .limit(100).all()
+    return render_template('top_channels_list.html', channels=top_100)
+
 @app.route('/search')
 def search():
     query_str = request.args.get('q', '')
@@ -396,7 +444,26 @@ def home():
         vids = Video.query.filter_by(category=cat_name, visibility='public').filter(or_(Video.scheduled_at == None, Video.scheduled_at <= now)).order_by(Video.views.desc()).limit(4).all()
         if vids: trending_by_category[cat_name] = vids
 
-    return render_template('index.html', hashtag=FEATURED_HASHTAG, hashtag_videos=hashtag_videos, sub_videos=sub_videos, trending_by_category=trending_by_category)
+    # --- SIDEBAR: Top 5 Overall Channels ---
+    top_overall_channels = db.session.query(User, func.count(Subscription.id).label('sub_count'))\
+        .outerjoin(Subscription, Subscription.channel_id == User.id)\
+        .group_by(User.id)\
+        .order_by(func.count(Subscription.id).desc())\
+        .limit(5).all()
+
+    # --- SIDEBAR: Top 5 of YOUR Subscriptions ---
+    top_subs = []
+    if current_user.is_authenticated:
+        my_sub_ids = [sub.channel_id for sub in Subscription.query.filter_by(subscriber_id=current_user.id).all()]
+        if my_sub_ids:
+            top_subs = db.session.query(User, func.count(Subscription.id).label('sub_count'))\
+                .outerjoin(Subscription, Subscription.channel_id == User.id)\
+                .filter(User.id.in_(my_sub_ids))\
+                .group_by(User.id)\
+                .order_by(func.count(Subscription.id).desc())\
+                .limit(5).all()
+
+    return render_template('index.html', hashtag=FEATURED_HASHTAG, hashtag_videos=hashtag_videos, sub_videos=sub_videos, trending_by_category=trending_by_category, top_overall_channels=top_overall_channels, top_subs=top_subs)
 
 @app.route('/channel/<username>')
 def channel(username):
@@ -434,7 +501,6 @@ def watch(video_id):
     now = datetime.now()
     one_hour_ago = now - timedelta(hours=1)
     
-    # Check recent views based on User Account (or IP if logged out)
     if current_user.is_authenticated:
         recent_views = ViewTracker.query.filter(
             ViewTracker.video_id == video.id,
@@ -449,7 +515,6 @@ def watch(video_id):
             ViewTracker.timestamp >= one_hour_ago
         ).count()
         
-    # Only grant a view if they haven't spammed it 5 times recently
     if recent_views < 5:
         video.views += 1
         new_view = ViewTracker(
@@ -632,6 +697,14 @@ def add_comment():
     video_id = request.form.get('video_id')
     text = request.form.get('text')
     parent_id = request.form.get('parent_id')
+    
+    # --- FLATTEN REPLIES ---
+    # If a user is replying to a reply, this forces the parent_id to point back to the top-level comment
+    if parent_id:
+        parent_comment = Comment.query.get(parent_id)
+        if parent_comment and parent_comment.parent_id is not None:
+            parent_id = parent_comment.parent_id 
+
     if text and video_id:
         db.session.add(Comment(video_id=video_id, user_id=current_user.id, parent_id=parent_id if parent_id else None, username_cache=current_user.display_name, time_str=datetime.now().strftime("%b %d, %Y"), text=text))
         db.session.commit()
