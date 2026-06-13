@@ -430,8 +430,35 @@ def watch(video_id):
         if not current_user.is_authenticated or current_user.id != video.user_id:
             return "This video is private.", 403
             
-    video.views += 1
-    db.session.commit()
+    # --- VIEW LIMITER LOGIC ---
+    now = datetime.now()
+    one_hour_ago = now - timedelta(hours=1)
+    
+    # Check recent views based on User Account (or IP if logged out)
+    if current_user.is_authenticated:
+        recent_views = ViewTracker.query.filter(
+            ViewTracker.video_id == video.id,
+            ViewTracker.user_id == current_user.id,
+            ViewTracker.timestamp >= one_hour_ago
+        ).count()
+    else:
+        client_ip = request.remote_addr
+        recent_views = ViewTracker.query.filter(
+            ViewTracker.video_id == video.id,
+            ViewTracker.ip_address == client_ip,
+            ViewTracker.timestamp >= one_hour_ago
+        ).count()
+        
+    # Only grant a view if they haven't spammed it 5 times recently
+    if recent_views < 5:
+        video.views += 1
+        new_view = ViewTracker(
+            video_id=video.id, 
+            user_id=current_user.id if current_user.is_authenticated else None,
+            ip_address=request.remote_addr if not current_user.is_authenticated else None
+        )
+        db.session.add(new_view)
+        db.session.commit()
     
     is_subbed = False
     user_playlists = []
