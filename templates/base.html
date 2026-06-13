@@ -5,8 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudPlay</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Dark Mode Overrides for Inline Styles -->
+    <style>
+        body.dark-theme {
+            background-color: #121212 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-theme header {
+            background-color: #1a1a1a !important;
+            border-bottom: 1px solid #333 !important;
+        }
+        body.dark-theme input, body.dark-theme textarea {
+            background-color: #2c2c2c !important;
+            color: #fff !important;
+            border: 1px solid #555 !important;
+        }
+        body.dark-theme .settings-panel, body.dark-theme .video-card {
+            background-color: #1e1e1e !important;
+            border-color: #333 !important;
+            box-shadow: none !important;
+        }
+        body.dark-theme .settings-box {
+            background-color: #2a2a2a !important;
+            border-color: #444 !important;
+        }
+        body.dark-theme .settings-box label, body.dark-theme .settings-box small {
+            color: #ccc !important;
+        }
+        body.dark-theme a {
+            color: #90caf9 !important;
+        }
+        body.dark-theme .feed-section-title {
+            color: #fff !important;
+        }
+        body.dark-theme .sidebar-box {
+            background-color: rgba(255,255,255,0.05) !important;
+            border-color: #333 !important;
+        }
+    </style>
 </head>
-<body>
+<body {% if dark_mode %}class="dark-theme"{% endif %}>
     <header>
         <div class="logo">
             <a href="/">CloudPlay</a>
@@ -42,6 +81,18 @@
             {% endif %}
         </div>
     </header>
+
+    <!-- System Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div style="max-width: 800px; margin: 10px auto; background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; border: 1px solid #ffeeba;">
+                {% for message in messages %}
+                    <p style="margin: 0; text-align: center; font-size: 14px;">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <main style="padding: 20px;">
         {% block content %}{% endblock %}
     </main>
