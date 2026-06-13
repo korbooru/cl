@@ -525,14 +525,18 @@ def watch(video_id):
         db.session.add(new_view)
         db.session.commit()
     
-    is_subbed = False
+is_subbed = False
     user_playlists = []
     if current_user.is_authenticated:
         is_subbed = Subscription.query.filter_by(subscriber_id=current_user.id, channel_id=video.user_id).first() is not None
         user_playlists = Playlist.query.filter_by(user_id=current_user.id).all()
         
     comments = Comment.query.filter_by(video_id=video.id, parent_id=None).all()
-    return render_template('watch.html', video=video, comments=comments, is_subbed=is_subbed, user_playlists=user_playlists)
+    
+    # NEW: Fetch up to 10 other public videos for the recommended sidebar
+    recommended = Video.query.filter(Video.id != video.id, Video.visibility == 'public').limit(10).all()
+    
+    return render_template('watch.html', video=video, comments=comments, is_subbed=is_subbed, user_playlists=user_playlists, recommended=recommended)
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
