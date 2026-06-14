@@ -526,7 +526,7 @@ def watch(video_id):
         db.session.commit()
     
 is_subbed = False
-    user_playlists = []
+user_playlists = []
     if current_user.is_authenticated:
         is_subbed = Subscription.query.filter_by(subscriber_id=current_user.id, channel_id=video.user_id).first() is not None
         user_playlists = Playlist.query.filter_by(user_id=current_user.id).all()
